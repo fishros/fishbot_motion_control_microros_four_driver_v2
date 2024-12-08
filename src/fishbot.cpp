@@ -151,15 +151,14 @@ bool setup_fishbot()
     // 初始化IMU
     imu.begin(12, 13);
     // 2.设置IO 电机&编码器
-    motor.attachMotor(0, 4, 5);   // 将电机0连接到引脚33和引脚25
-    motor.attachMotor(1, 20, 3);  // 将电机1连接到引脚26和引脚27
-    motor.attachMotor(2, 15, 16); // 将电机1连接到引脚26和引脚27
-    motor.attachMotor(3, 46, 9);  // 将电机1连接到引脚26和引脚27
-
-    encoders[0].init(0, 6, 7);   // 初始化第一个编码器，使用GPIO 32和33连接
-    encoders[1].init(1, 8, 19);  // 初始化第二个编码器，使用GPIO 26和25连接
-    encoders[2].init(2, 17, 18); // 初始化第二个编码器，使用GPIO 26和25连接
-    encoders[3].init(3, 10, 11); // 初始化第二个编码器，使用GPIO 26和25w连接
+    motor.attachMotor(0, 5, 4); 
+    motor.attachMotor(1, 15, 16); 
+    motor.attachMotor(2, 3, 20); 
+    motor.attachMotor(3, 46, 9); 
+    encoders[0].init(0, 6, 7);   
+    encoders[1].init(1, 18, 17); 
+    encoders[2].init(2, 8, 19);  
+    encoders[3].init(3, 11, 10);
     // 3.设置PID
     for (int i = 0; i < 4; i++)
     {
