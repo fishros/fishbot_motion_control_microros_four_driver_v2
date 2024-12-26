@@ -132,8 +132,8 @@ String FishBotConfig::config_str()
     config.concat("\n$pid_outlimit=");
     config.concat(kinematics_pid_out_limit());
 
-    config.concat("\n$board=motion_board");
-    config.concat("\n$version=v1.1.0\n");
+    config.concat("\n$board=fishbot_motion_4driver_v2");
+    config.concat("\n$version=v2.0.0\n");
 
     return config;
 }
