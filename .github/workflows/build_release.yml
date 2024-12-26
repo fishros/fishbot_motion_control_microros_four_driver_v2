@@ -32,7 +32,7 @@ jobs:
 
       - name: Compress .pio directory
         run: |
-          cd .pio/libdeps/esp32s3/micro_ros_platformio/
+          cd .pio/libdeps/fishbot_motion_control_four_driver_v2/micro_ros_platformio/
           zip -r libmicroros libmicroros
 
       - name: Create Release and Upload Release Asset  
@@ -47,4 +47,4 @@ jobs:
           prerelease: false  
           files: |  
             ./bin/*
-            .pio/libdeps/esp32s3/micro_ros_platformio/libmicroros.zip
+            .pio/libdeps/fishbot_motion_control_four_driver_v2/micro_ros_platformio/libmicroros.zip
