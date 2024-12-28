@@ -16,7 +16,6 @@ export BINNAME=`echo $TNAME`_$TVERSION.$TDATA.bin
 export ELFNAME=`echo $TNAME`_$TVERSION.$TDATA.elf
 
 # export boot_app0_dir="/root/.platformio/packages/framework-arduinoespressif32/tools/partitions"
-esptool.py  --chip esp32 merge_bin -o bin/$BINNAME --flash_mode dio --flash_size 4MB 0x1000 .pio/build/fishbot_motion_control_four_driver_v2/bootloader.bin 0x8000 .pio/build/fishbot_motion_control_four_driver_v2/partitions.bin  0x10000 .pio/build/fishbot_motion_control_four_driver_v2/firmware.bin 
+esptool.py  --chip esp32s3 merge_bin -o bin/$BINNAME --flash_mode=keep --flash_size 4MB 0x0000 .pio/build/fishbot_motion_control_four_driver_v2/bootloader.bin 0x8000 .pio/build/fishbot_motion_control_four_driver_v2/partitions.bin  0xe000 ./boards/boot_app0.bin  0x10000 .pio/build/fishbot_motion_control_four_driver_v2/firmware.bin 
 cp .pio/build/fishbot_motion_control_four_driver_v2/firmware.elf bin/$ELFNAME
 echo "Build Finish bin/`ls bin`"
-
