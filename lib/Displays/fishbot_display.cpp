@@ -42,6 +42,8 @@ void FishBotDisplay::updateDisplay()
         _display.println(version_code_);
         _display.print("mode:");
         _display.println(mode_);
+        _display.print("motion:");
+        _display.println(motion_mode_);
         if (mode_ == "udp_client")
         {
             // 连接成功显示当前ip，电压，线速度和角速度
@@ -85,6 +87,8 @@ void FishBotDisplay::updateDisplay()
         {
             _display.print("time :");
             _display.println(timenow);
+            _display.print("motion:");
+            _display.println(motion_mode_);
             _display.print("baud :");
             _display.println(baudrate_);
             _display.print("voltage :");
@@ -163,6 +167,10 @@ String FishBotDisplay::twoDigits(int digits)
 void FishBotDisplay::updateBaudRate(uint32_t baudrate)
 {
     baudrate_ = baudrate;
+}
+void FishBotDisplay::updateMotionMode(String mode)
+{
+    motion_mode_ = mode;
 }
 
 void FishBotDisplay::updateStartupInfo()

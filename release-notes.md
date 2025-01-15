@@ -1,5 +1,6 @@
 
-- [feat] 修改板子标识/配置
+- [fix]修复bin合成错误
+- [feat]修改里程计childframe_id编号
 
 版本说明：
 - alpha:内部测试版本（不建议使用）

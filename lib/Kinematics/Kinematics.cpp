@@ -75,7 +75,6 @@ void Kinematics::update_bot_odom_(uint32_t dt)
 {
     static float linear_x_speed, linear_y_speed, angular_speed;
     float dt_s = (float)(dt / 1000) / 1000;
-
     this->kinematic_forward(motor_param_[0].motor_speed,
                             motor_param_[1].motor_speed,
                             motor_param_[2].motor_speed,
@@ -83,48 +82,54 @@ void Kinematics::update_bot_odom_(uint32_t dt)
                             linear_x_speed,
                             linear_y_speed,
                             angular_speed);
-
     odom_.angular_speed = angular_speed;
     odom_.linear_x_speed = linear_x_speed / 1000; // /1000（mm/s 转 m/s）
     odom_.linear_y_speed = linear_y_speed / 1000; // /1000（mm/s 转 m/s）
-
     /*更新x和y轴上移动的距离*/
     odom_.x += odom_.linear_x_speed * cos(odom_.yaw) * dt_s + odom_.linear_y_speed * sin(odom_.yaw) * dt_s;
     odom_.y += odom_.linear_y_speed * cos(odom_.yaw) * dt_s + odom_.linear_x_speed * sin(odom_.yaw) * dt_s;
-
     odom_.yaw += odom_.angular_speed * dt_s;
     Kinematics::TransAngleInPI(odom_.yaw, odom_.yaw);
-
     // Serial.printf("odom(%f,%f)\n", odom_.x, odom_.y);
 }
 
 void Kinematics::kinematic_inverse(float linear_x_speed, float linear_y_speed, float angular_speed,
                                    float &out_wheel_speed1, float &out_wheel_speed2, float &out_wheel_speed3, float &out_wheel_speed4)
 {
-    // TODO : 参数化
-    const float a = 108.0f;
-    const float b = 88.5f;
-
-    out_wheel_speed1 = linear_x_speed - linear_y_speed - angular_speed * (a + b);
-    out_wheel_speed2 = linear_x_speed + linear_y_speed + angular_speed * (a + b);
-    out_wheel_speed3 = linear_x_speed + linear_y_speed - angular_speed * (a + b);
-    out_wheel_speed4 = linear_x_speed - linear_y_speed + angular_speed * (a + b);
-
+    if (motion_motion_ == MOTION_OMNIDIRECTIONAL)
+    {
+        out_wheel_speed1 = linear_x_speed - linear_y_speed - angular_speed * (wheel_distance_a_and_b_);
+        out_wheel_speed2 = linear_x_speed + linear_y_speed + angular_speed * (wheel_distance_a_and_b_);
+        out_wheel_speed3 = linear_x_speed + linear_y_speed - angular_speed * (wheel_distance_a_and_b_);
+        out_wheel_speed4 = linear_x_speed - linear_y_speed + angular_speed * (wheel_distance_a_and_b_);
+    }
+    else if (motion_motion_ == MOTION_DIFFERENTIAL_DRIVE)
+    {
+        out_wheel_speed1 = linear_x_speed - angular_speed * (wheel_distance_a_and_b_ / 2);
+        out_wheel_speed2 = linear_x_speed + angular_speed * (wheel_distance_a_and_b_ / 2);
+        out_wheel_speed3 = linear_x_speed - angular_speed * (wheel_distance_a_and_b_ / 2);
+        out_wheel_speed4 = linear_x_speed + angular_speed * (wheel_distance_a_and_b_ / 2);
+    }
     // Serial.printf("out_wheel_speed[%f,%f,%f,%f]\n", out_wheel_speed1, out_wheel_speed2, out_wheel_speed3, out_wheel_speed4);
 }
 
 void Kinematics::kinematic_forward(float wheel1_speed, float wheel2_speed, float wheel3_speed, float wheel4_speed,
                                    float &linear_x_speed, float &linear_y_speed, float &angular_speed)
 {
-    // TODO : 参数化
-    const float a = 108.0f;
-    const float b = 88.5f;
-
-    // 计算机器人的 x 轴线速度，公式为四个轮子转速之和的平均值。
-    linear_x_speed = (wheel1_speed + wheel2_speed + wheel3_speed + wheel4_speed) / 4.0f;
-    linear_y_speed = (-wheel1_speed + wheel2_speed + wheel3_speed - wheel4_speed) / 4.0f;
-    angular_speed = float(-wheel1_speed + wheel2_speed - wheel3_speed + wheel4_speed) / (4.0f * (a + b));
-    // Serial.printf("angular_speed:%f wheel_speed[%f,%f,%f,%f]\n",angular_speed, wheel1_speed, wheel2_speed, wheel3_speed, wheel4_speed);
+    if (motion_motion_ == MOTION_OMNIDIRECTIONAL)
+    {
+        linear_x_speed = (wheel1_speed + wheel2_speed + wheel3_speed + wheel4_speed) / 4.0f;
+        linear_y_speed = (-wheel1_speed + wheel2_speed + wheel3_speed - wheel4_speed) / 4.0f;
+        angular_speed = float(-wheel1_speed + wheel2_speed - wheel3_speed + wheel4_speed) / (4.0f * (wheel_distance_a_and_b_));
+        // Serial.printf("angular_speed:%f wheel_speed[%f,%f,%f,%f]\n",angular_speed, wheel1_speed, wheel2_speed, wheel3_speed, wheel4_speed);
+    }
+    else if (motion_motion_ == MOTION_DIFFERENTIAL_DRIVE)
+    {
+        // 计算机器人的 x 轴线速度，公式为四个轮子转速之和的平均值。
+        linear_x_speed = (wheel1_speed + wheel2_speed + wheel3_speed + wheel4_speed) / 4.0f;
+        linear_y_speed = 0.0f; // For differential drive, there is no lateral movement
+        angular_speed = (wheel2_speed + wheel4_speed - wheel1_speed - wheel3_speed) / (2.0f * wheel_distance_a_and_b_);
+    }
 }
 
 odom_t &Kinematics::odom()
@@ -132,8 +137,17 @@ odom_t &Kinematics::odom()
     Kinematics::Euler2Quaternion(0, 0, odom_.yaw, odom_.quaternion);
     return odom_;
 }
-
+void Kinematics::set_motion_model(motion_model_t model)
+{
+    motion_motion_ = model;
+}
 float Kinematics::motor_speed(uint8_t id)
 {
     return motor_param_[id].motor_speed;
+}
+void Kinematics::set_kinematic_param(float wheel_distance_a, float wheel_distance_b)
+{
+    wheel_distance_a_ = wheel_distance_a;
+    wheel_distance_b_ = wheel_distance_b;
+    wheel_distance_a_and_b_ = (wheel_distance_a_ + wheel_distance_b_) / 2;
 }

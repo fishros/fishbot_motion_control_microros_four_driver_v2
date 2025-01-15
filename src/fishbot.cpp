@@ -100,6 +100,20 @@ void WiFiEventCB(WiFiEvent_t event, WiFiEventInfo_t info)
     };
 }
 
+void longPressClick()
+{
+    fishlog_debug("key", "longPressClick() detected.");
+    if (config.motion_mode() == CONFIG_MOTION_MODE_MECANUM)
+    {
+        config.config("motion", CONFIG_MOTION_MODE_DIFFERENTIAL);
+    }
+    else
+    {
+        config.config("motion", CONFIG_MOTION_MODE_MECANUM);
+    }
+    esp_restart();
+}
+
 // 用于处理机器人上的按钮双击事件
 void doubleClick()
 {
@@ -133,10 +147,6 @@ bool setup_fishbot()
     config.init(CONFIG_NAME_NAMESPACE);
     Serial.println(FIRST_START_TIP);
     Serial.println(config.config_str());
-    if (config.microros_serial_id() == 2)
-    {
-        Serial2.begin(115200);
-    }
     // 初始化LED
     pinMode(48, OUTPUT);
     // 初始化显示
@@ -145,9 +155,11 @@ bool setup_fishbot()
     display.updateTransMode(config.microros_transport_mode());
     display.updateBaudRate(config.serial_baudrate());
     display.updateStartupInfo();
+    display.updateMotionMode(config.motion_mode());
     // 初始化按键
     button.attachDoubleClick(doubleClick);
     button.attachClick(oneClick);
+    button.attachLongPressStop(longPressClick);
     // 初始化IMU
     imu.begin(12, 13);
     // 2.设置IO 电机&编码器
@@ -168,8 +180,8 @@ bool setup_fishbot()
         kinematics.set_motor_param(i, config.kinematics_reducation_ration(), config.kinematics_pulse_ration(), config.kinematics_wheel_diameter());
     }
     // 4.设置运动学参数
-    kinematics.set_kinematic_param(config.kinematics_wheel_distance());
-    kinematics.set_kinematic_param(config.kinematics_wheel_distance());
+    kinematics.set_motion_model(config.motion_mode() == CONFIG_MOTION_MODE_MECANUM ? MOTION_OMNIDIRECTIONAL : MOTION_DIFFERENTIAL_DRIVE);
+    kinematics.set_kinematic_param(config.kinematics_wheel_distance_a(), config.kinematics_wheel_distance_b());
     // 5.设置电压测量引脚
     pinMode(14, INPUT);
     analogReadResolution(12);
@@ -231,17 +243,8 @@ bool setup_fishbot_transport()
     {
         // 将日志输出目标设置为蓝牙串口
         fishlog_set_target_null(); // 不输出日志
-        if (config.microros_serial_id() == 2)
-        {
-            // 调用 "microros_setup_transport_serial_()" 函数，以启动串口传输模式
-            microros_setup_transport_serial_(Serial2);
-            display.updateTransMode("serial2");
-        }
-        else
-        {
-            microros_setup_transport_serial_(Serial);
-            display.updateTransMode("serial");
-        }
+        microros_setup_transport_serial_(Serial);
+        display.updateTransMode("serial");
     }
     // 返回 true，表示传输模式设置成功
     return true;

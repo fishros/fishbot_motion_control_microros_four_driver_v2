@@ -44,6 +44,7 @@ private:
     uint64_t last_update_time;
     uint64_t update_interval{1000};
 
+    String motion_mode_;
     String wifi_ssid_;
     String wifi_pswd_;
     String wifi_ip_;
@@ -69,6 +70,7 @@ public:
     void updateWIFISSID(String ssid);
     void updateWIFIPSWD(String pswd);
     void updateVersionCode(String version_code);
+    void updateMotionMode(String mode);
     String twoDigits(int digits);
     FishBotDisplay();
     ~FishBotDisplay() = default;

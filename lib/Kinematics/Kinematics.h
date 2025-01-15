@@ -58,6 +58,16 @@ typedef struct
 } quaternion_t;
 
 /**
+ * @brief 运动模型类型
+ * 
+ */
+typedef enum
+{
+    MOTION_DIFFERENTIAL_DRIVE, // 差速驱动
+    MOTION_OMNIDIRECTIONAL     // 麦克纳姆轮驱动
+} motion_model_t;
+
+/**
  * @brief 里程计相关信息，根据轮子速度信息和运动模型推算而来
  *
  */
@@ -78,6 +88,10 @@ private:
     motor_param_t motor_param_[4];
     odom_t odom_;          // 里程计数据
     float wheel_distance_; // 轮子间距
+    float wheel_distance_a_and_b_; // 轮子间距a和b方向
+    float wheel_distance_a_; // 轮子间距a方向
+    float wheel_distance_b_; // 轮子间距b方向
+    motion_model_t motion_motion_ = MOTION_DIFFERENTIAL_DRIVE; 
 public:
     Kinematics(/* args */) = default;
     ~Kinematics() = default;
@@ -85,8 +99,11 @@ public:
     static void Euler2Quaternion(float roll, float pitch, float yaw, quaternion_t &q);
     static void TransAngleInPI(float angle, float &out_angle);
 
+    void set_motion_model(motion_model_t model);
+
     void set_motor_param(uint8_t id, uint16_t reducation_ratio, uint16_t pulse_ration, float wheel_diameter);
     void set_kinematic_param(float wheel_distance);
+    void set_kinematic_param(float wheel_distance_a, float wheel_distance_b);
 
     void kinematic_inverse(float linear_x_speed, float linear_y_speed, float angular_speed, 
             float &out_wheel1_speed, float &out_wheel2_speed, float &out_wheel3_speed, float &out_wheel4_speed);

@@ -21,6 +21,8 @@ void FishBotConfig::init(String namespace_)
         preferences.putString("wifi_ssid", CONFIG_DEFAULT_WIFI_STA_SSID);
         preferences.putString("wifi_pswd", CONFIG_DEFAULT_WIFI_STA_PSWK);
 
+        preferences.putString("motion", CONFIG_MOTION_MODE_DIFFERENTIAL);
+
         preferences.putString("microros_mode", CONFIG_DEFAULT_TRANSPORT_MODE);
         preferences.putString("udpserver_ip", CONFIG_DEFAULT_TRANSPORT_MODE_WIFI_SERVER_IP);
         preferences.putString("udpserver_port", CONFIG_DEFAULT_TRANSPORT_MODE_WIFI_SERVER_PORT);
@@ -29,10 +31,12 @@ void FishBotConfig::init(String namespace_)
         preferences.putString("ros2_namespace", CONFIG_DEFAULT_ROS2_NAMESPACE);
         preferences.putString("odom_topic", CONFIG_DEFAULT_ROS2_ODOM_TOPIC_NAME);
         preferences.putString("odom_frameid", CONFIG_DEFAULT_ROS2_ODOM_FRAME_ID);
+        preferences.putString("odom_c_frameid", CONFIG_DEFAULT_ROS2_ODOM_CHILD_FRAME_ID);
         preferences.putString("odom_pub_period", CONFIG_DEFAULT_ROS2_ODOM_PUBLISH_PERIOD);
         preferences.putString("twist_topic", CONFIG_DEFAULT_ROS2_CMD_VEL_TOPIC_NAME);
 
-        preferences.putString("wheel_distance", CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE);
+        preferences.putString("wheel_dist_a", CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE_A);
+        preferences.putString("wheel_dist_b", CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE_B);
         preferences.putString("reducate_ration", CONFIG_DEFAULT_MOTOR_PARAM_REDUCATION_RATIO);
         preferences.putString("pulse_ration", CONFIG_DEFAULT_MOTOR_PARAM_PULSE_RATION);
         preferences.putString("wheel_diameter", CONFIG_DEFAULT_MOTOR_PARAM_WHEEL_DIAMETER);
@@ -63,10 +67,14 @@ String FishBotConfig::config_str()
     String config("");
     config.concat("$first_startup=");
     config.concat(is_first_startup());
+
+    config.concat("\n$motion=");
+    config.concat(motion_mode());
+
     config.concat("\n$serial_baud=");
     config.concat(serial_baudrate());
-    config.concat("\n$serial_id=");
-    config.concat(microros_serial_id());
+    // config.concat("\n$serial_id=");
+    // config.concat(microros_serial_id());
     config.concat("\n$wifi_ssid=");
     config.concat(wifi_sta_ssid());
     config.concat("\n$wifi_pswd=");
@@ -117,8 +125,11 @@ String FishBotConfig::config_str()
     config.concat("\n$wheel_diameter=");
     config.concat(kinematics_wheel_diameter());
 
-    config.concat("\n$wheel_distance=");
-    config.concat(kinematics_wheel_distance());
+    config.concat("\n$wheel_dist_a=");
+    config.concat(kinematics_wheel_distance_a());
+
+    config.concat("\n$wheel_dist_b=");
+    config.concat(kinematics_wheel_distance_b());
 
     config.concat("\n$pid_kp=");
     config.concat(kinematics_pid_kp());
@@ -149,18 +160,18 @@ String FishBotConfig::board_name()
 
 uint32_t FishBotConfig::serial_baudrate()
 {
-    return preferences.getString(CONFIG_NAME_TRANSPORT_SERIAL_BAUD, CONFIG_DEFAULT_TRANSPORT_SERIAL_BAUD).toInt();
+    return preferences.getString("serial_baud", CONFIG_DEFAULT_TRANSPORT_SERIAL_BAUD).toInt();
 }
 
 String FishBotConfig::wifi_sta_ssid()
 {
-    return preferences.getString(CONFIG_NAME_WIFI_STA_SSID_NAME, CONFIG_DEFAULT_WIFI_STA_SSID);
+    return preferences.getString("wifi_ssid", CONFIG_DEFAULT_WIFI_STA_SSID);
 }
 
 String FishBotConfig::wifi_sta_pswd()
 {
 
-    return preferences.getString(CONFIG_NAME_WIFI_STA_PSWK_NAME, CONFIG_DEFAULT_WIFI_STA_PSWK);
+    return preferences.getString("wifi_pswd", CONFIG_DEFAULT_WIFI_STA_PSWK);
 }
 
 String FishBotConfig::wifi_ap_ssid()
@@ -218,9 +229,13 @@ String FishBotConfig::ros2_twist_topic_name()
     return preferences.getString("twist_topic", CONFIG_DEFAULT_ROS2_CMD_VEL_TOPIC_NAME);
 }
 // 运动学相关配置
-float FishBotConfig::kinematics_wheel_distance()
+float FishBotConfig::kinematics_wheel_distance_a()
 {
-    return preferences.getString("wheel_distance", CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE).toFloat();
+    return preferences.getString("wheel_dist_a", CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE_A).toFloat();
+}
+float FishBotConfig::kinematics_wheel_distance_b()
+{
+    return preferences.getString("wheel_dist_b", CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE_B).toFloat();
 }
 float FishBotConfig::kinematics_reducation_ration()
 {
@@ -250,7 +265,10 @@ float FishBotConfig::kinematics_pid_out_limit()
 {
     return preferences.getString("pid_outlimit", CONFIG_DEFAULT_MOTOR_OUT_LIMIT_HIGH).toInt();
 }
-
+String FishBotConfig::motion_mode()
+{
+    return preferences.getString("motion", CONFIG_MOTION_MODE_DIFFERENTIAL);
+}
 /**
  * @brief
  * @param line
