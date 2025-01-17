@@ -26,25 +26,38 @@ void Kinematics::TransAngleInPI(float angle, float &out_angle)
     }
 }
 
-void Kinematics::set_motor_param(uint8_t id, uint16_t reducation_ratio, uint16_t pulse_ration, float wheel_diameter)
+// void Kinematics::set_motor_param(uint8_t id, uint16_t reducation_ratio, uint16_t pulse_ration, float wheel_diameter)
+// {
+//     motor_param_[id].id = id;
+//     motor_param_[id].reducation_ratio = reducation_ratio;
+//     motor_param_[id].pulse_ration = pulse_ration;
+//     motor_param_[id].wheel_diameter = wheel_diameter;
+//     motor_param_[id].per_pulse_distance = (wheel_diameter * PI) / (reducation_ratio * pulse_ration);
+//     motor_param_[id].speed_factor = (1000 * 1000) * (wheel_diameter * PI) / (reducation_ratio * pulse_ration);
+//     // 给初值
+//     motor_param_[id].last_encoder_tick = 0;
+//     Serial.printf("init motor param %d: %f=%f*PI/(%d*%d) speed_factor=%d\n", id, motor_param_[id].per_pulse_distance, wheel_diameter, reducation_ratio, pulse_ration, motor_param_[id].speed_factor);
+// }
+
+void Kinematics::set_motor_param(uint8_t id, uint32_t speed_factor)
 {
     motor_param_[id].id = id;
-    motor_param_[id].reducation_ratio = reducation_ratio;
-    motor_param_[id].pulse_ration = pulse_ration;
-    motor_param_[id].wheel_diameter = wheel_diameter;
-    motor_param_[id].per_pulse_distance = (wheel_diameter * PI) / (reducation_ratio * pulse_ration);
-    motor_param_[id].speed_factor = (1000 * 1000) * (wheel_diameter * PI) / (reducation_ratio * pulse_ration);
-    // 给初值
+    motor_param_[id].speed_factor = speed_factor;
     motor_param_[id].last_encoder_tick = 0;
-
-    // Serial.printf("init motor param %d: %f=%f*PI/(%d*%d) speed_factor=%d\n", id, motor_param_[id].per_pulse_distance, wheel_diameter, reducation_ratio, pulse_ration, motor_param_[id].speed_factor);
+    Serial.printf("init motor param %d: speed_factor=%d\n", id, motor_param_[id].speed_factor);
 }
 
 void Kinematics::set_kinematic_param(float wheel_distance)
 {
     wheel_distance_ = wheel_distance;
 }
-
+void Kinematics::set_kinematic_calib(float calib_mx, float calib_dx, float calib_myaw, float calib_dyaw)
+{
+    calib_mx_ = calib_mx;
+    calib_dx_ = calib_dx;
+    calib_myaw_ = calib_myaw;
+    calib_dyaw_ = calib_dyaw;
+}
 void Kinematics::update_motor_ticks(uint64_t current_time, int32_t motor_tick1, int32_t motor_tick2, int32_t motor_tick3, int32_t motor_tick4)
 {
     uint32_t dt = current_time - motor_param_[0].last_update_time;
@@ -85,6 +98,17 @@ void Kinematics::update_bot_odom_(uint32_t dt)
     odom_.angular_speed = angular_speed;
     odom_.linear_x_speed = linear_x_speed / 1000; // /1000（mm/s 转 m/s）
     odom_.linear_y_speed = linear_y_speed / 1000; // /1000（mm/s 转 m/s）
+
+    if (motion_motion_ == MOTION_OMNIDIRECTIONAL)
+    {
+        odom_.linear_x_speed *= calib_mx_;
+        odom_.angular_speed *= calib_myaw_;
+    }
+    else
+    {
+        odom_.linear_x_speed *= calib_dx_;
+        odom_.angular_speed *= calib_dyaw_;
+    }
     /*更新x和y轴上移动的距离*/
     odom_.x += odom_.linear_x_speed * cos(odom_.yaw) * dt_s + odom_.linear_y_speed * sin(odom_.yaw) * dt_s;
     odom_.y += odom_.linear_y_speed * cos(odom_.yaw) * dt_s + odom_.linear_x_speed * sin(odom_.yaw) * dt_s;
@@ -102,15 +126,15 @@ void Kinematics::kinematic_inverse(float linear_x_speed, float linear_y_speed, f
         out_wheel_speed2 = linear_x_speed + linear_y_speed + angular_speed * (wheel_distance_a_and_b_);
         out_wheel_speed3 = linear_x_speed + linear_y_speed - angular_speed * (wheel_distance_a_and_b_);
         out_wheel_speed4 = linear_x_speed - linear_y_speed + angular_speed * (wheel_distance_a_and_b_);
+        // Serial.printf("out_wheel_speed[%f,%f,%f,%f]\n", out_wheel_speed1, out_wheel_speed2, out_wheel_speed3, out_wheel_speed4);
     }
     else if (motion_motion_ == MOTION_DIFFERENTIAL_DRIVE)
     {
-        out_wheel_speed1 = linear_x_speed - angular_speed * (wheel_distance_a_and_b_ / 2);
-        out_wheel_speed2 = linear_x_speed + angular_speed * (wheel_distance_a_and_b_ / 2);
-        out_wheel_speed3 = linear_x_speed - angular_speed * (wheel_distance_a_and_b_ / 2);
-        out_wheel_speed4 = linear_x_speed + angular_speed * (wheel_distance_a_and_b_ / 2);
+        out_wheel_speed1 = linear_x_speed - (angular_speed * wheel_distance_ / 2);
+        out_wheel_speed3 = linear_x_speed - (angular_speed * wheel_distance_ / 2);
+        out_wheel_speed2 = linear_x_speed + (angular_speed * wheel_distance_ / 2);
+        out_wheel_speed4 = linear_x_speed + (angular_speed * wheel_distance_ / 2);
     }
-    // Serial.printf("out_wheel_speed[%f,%f,%f,%f]\n", out_wheel_speed1, out_wheel_speed2, out_wheel_speed3, out_wheel_speed4);
 }
 
 void Kinematics::kinematic_forward(float wheel1_speed, float wheel2_speed, float wheel3_speed, float wheel4_speed,
@@ -121,15 +145,15 @@ void Kinematics::kinematic_forward(float wheel1_speed, float wheel2_speed, float
         linear_x_speed = (wheel1_speed + wheel2_speed + wheel3_speed + wheel4_speed) / 4.0f;
         linear_y_speed = (-wheel1_speed + wheel2_speed + wheel3_speed - wheel4_speed) / 4.0f;
         angular_speed = float(-wheel1_speed + wheel2_speed - wheel3_speed + wheel4_speed) / (4.0f * (wheel_distance_a_and_b_));
-        // Serial.printf("angular_speed:%f wheel_speed[%f,%f,%f,%f]\n",angular_speed, wheel1_speed, wheel2_speed, wheel3_speed, wheel4_speed);
     }
     else if (motion_motion_ == MOTION_DIFFERENTIAL_DRIVE)
     {
         // 计算机器人的 x 轴线速度，公式为四个轮子转速之和的平均值。
         linear_x_speed = (wheel1_speed + wheel2_speed + wheel3_speed + wheel4_speed) / 4.0f;
         linear_y_speed = 0.0f; // For differential drive, there is no lateral movement
-        angular_speed = (wheel2_speed + wheel4_speed - wheel1_speed - wheel3_speed) / (2.0f * wheel_distance_a_and_b_);
+        angular_speed = (wheel2_speed + wheel4_speed - wheel1_speed - wheel3_speed) / (2.0f * wheel_distance_);
     }
+    // Serial.printf("angular_speed:%f wheel_speed[%f,%f,%f,%f]\n",angular_speed, wheel1_speed, wheel2_speed, wheel3_speed, wheel4_speed);
 }
 
 odom_t &Kinematics::odom()

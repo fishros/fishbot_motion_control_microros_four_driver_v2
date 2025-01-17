@@ -177,10 +177,12 @@ bool setup_fishbot()
         pid_controller[i].update_target(0.0);
         pid_controller[i].update_pid(config.kinematics_pid_kp(), config.kinematics_pid_ki(), config.kinematics_pid_kd());
         pid_controller[i].out_limit(-config.kinematics_pid_out_limit(), config.kinematics_pid_out_limit());
-        kinematics.set_motor_param(i, config.kinematics_reducation_ration(), config.kinematics_pulse_ration(), config.kinematics_wheel_diameter());
+        kinematics.set_motor_param(i, (config.motion_mode() == CONFIG_MOTION_MODE_MECANUM ? config.motor_param_mspeed_factor() : config.motor_param_dspeed_factor())*1000);
     }
     // 4.设置运动学参数
+    kinematics.set_kinematic_calib(config.kinematics_calib_mx(), config.kinematics_calib_dx(), config.kinematics_calib_myaw(), config.kinematics_calib_dyaw());
     kinematics.set_motion_model(config.motion_mode() == CONFIG_MOTION_MODE_MECANUM ? MOTION_OMNIDIRECTIONAL : MOTION_DIFFERENTIAL_DRIVE);
+    kinematics.set_kinematic_param(config.kinematics_wheel_distance());
     kinematics.set_kinematic_param(config.kinematics_wheel_distance_a(), config.kinematics_wheel_distance_b());
     // 5.设置电压测量引脚
     pinMode(14, INPUT);

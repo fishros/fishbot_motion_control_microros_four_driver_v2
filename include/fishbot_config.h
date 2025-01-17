@@ -20,7 +20,7 @@
 #define CONFIG_TRANSPORT_MODE_SERIAL "serial"              // 串口模式，0
 #define CONFIG_TRANSPORT_MODE_WIFI_UDP_CLIENT "udp_client" // UDP客户端模式，1
 
-#define CONFIG_MOTION_MODE_MECANUM "mecanum" // 麦轮模式
+#define CONFIG_MOTION_MODE_MECANUM "mecanum"           // 麦轮模式
 #define CONFIG_MOTION_MODE_DIFFERENTIAL "differential" // 差速轮模式
 
 /*=========================================默认值定义=====================================*/
@@ -40,18 +40,23 @@
 #define CONFIG_DEFAULT_MOTOR_PID_KD "0.0"
 #define CONFIG_DEFAULT_MOTOR_OUT_LIMIT_LOW "-100"
 #define CONFIG_DEFAULT_MOTOR_OUT_LIMIT_HIGH "100"
-#define CONFIG_DEFAULT_MOTOR_PARAM_REDUCATION_RATIO "45"
-#define CONFIG_DEFAULT_MOTOR_PARAM_PULSE_RATION "44"
-#define CONFIG_DEFAULT_MOTOR_PARAM_WHEEL_DIAMETER "48"
+#define CONFIG_DEFAULT_MOTOR_PARAM_MSPEED_FACTOR "76.159"
+#define CONFIG_DEFAULT_MOTOR_PARAM_DSPEED_FACTOR "103.133"
 //-------------------------------------默认轮距----------------------------------------------
-#define CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE_A "216" 
-#define CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE_B "177"
+#define CONFIG_DEFAULT_KINEMATIC_ODOM_CALIB_MX "1.0"   // 里程计校准麦轮X
+#define CONFIG_DEFAULT_KINEMATIC_ODOM_CALIB_DX "1.24"  // 里程计校准差速轮X
+#define CONFIG_DEFAULT_KINEMATIC_ODOM_CALIB_MYAW "1.22" // 校准麦轮角度
+#define CONFIG_DEFAULT_KINEMATIC_ODOM_CALIB_DYAW "1.0" // 校准差速轮角度
 
+#define CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE_A "216"
+#define CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE_B "177"
+#define CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE "360" // 非真实轮径
 //------------------------------------IO相关配置----------------------------------------------
 
 //-----------------------------ROS2节点相关配置-------------------------------------------
 #define CONFIG_DEFAULT_ROS2_NODE_NAME "fishbot_motion_control"
 #define CONFIG_DEFAULT_ROS2_NAMESPACE ""
+#define CONFIG_DEFAULT_ROS2_DOMAINID "0"
 #define CONFIG_DEFAULT_ROS2_ODOM_TOPIC_NAME "odom"
 #define CONFIG_DEFAULT_ROS2_ODOM_FRAME_ID "odom"
 #define CONFIG_DEFAULT_ROS2_ODOM_CHILD_FRAME_ID "base_footprint"
@@ -98,21 +103,29 @@ public:
     String microros_uclient_server_ip();
     uint32_t microros_uclient_server_port();
     uint32_t microros_serial_id();
-    // ROS2相关
-    String ros2_nodename();
-    String ros2_namespace();
+    // =======================================ROS2相关=========================================
+    String ros2_nodename();   // 节点名字
+    String ros2_namespace();  // 命名空间
+    uint16_t ros2_domainid(); // 域ID
     String ros2_odom_topic_name();
     String ros2_odom_frameid();
     String ros2_odom_child_frameid();
     String ros2_twist_topic_name();
     uint32_t odom_publish_period();
-    // 运动学相关配置
-    float kinematics_reducation_ration();
-    uint32_t kinematics_pulse_ration();
-    uint32_t kinematics_wheel_diameter();
+    // ====================================运动学相关参数=======================================
+    // 速度因子
+    float motor_param_dspeed_factor(); // 差速轮速度因子=（轮子直径*PI）/（减速比*脉冲比）* 10^3
+    float motor_param_mspeed_factor(); // 麦轮速度因子=（轮子直径*PI）/（减速比*脉冲比）* 10^3
+    // 轮子距离参数
+    float kinematics_wheel_distance();
     float kinematics_wheel_distance_a();
     float kinematics_wheel_distance_b();
-    
+    // 校准参数
+    float kinematics_calib_mx();   // 里程计校准麦轮X
+    float kinematics_calib_dx();   //  里程计校准差速轮X
+    float kinematics_calib_myaw(); // 校准麦轮角度
+    float kinematics_calib_dyaw(); //  校准差速轮角度
+
     float kinematics_pid_kp();
     float kinematics_pid_ki();
     float kinematics_pid_kd();

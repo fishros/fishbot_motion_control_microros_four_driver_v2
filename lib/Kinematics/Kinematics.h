@@ -87,10 +87,14 @@ class Kinematics
 private:
     motor_param_t motor_param_[4];
     odom_t odom_;          // 里程计数据
-    float wheel_distance_; // 轮子间距
+    float wheel_distance_; // 轮子间距,四轮/两轮差速使用
     float wheel_distance_a_and_b_; // 轮子间距a和b方向
     float wheel_distance_a_; // 轮子间距a方向
     float wheel_distance_b_; // 轮子间距b方向
+    float calib_mx_;        // 里程计校准麦轮X
+    float calib_dx_;       // 实际/目标
+    float calib_myaw_;    
+    float calib_dyaw_;      
     motion_model_t motion_motion_ = MOTION_DIFFERENTIAL_DRIVE; 
 public:
     Kinematics(/* args */) = default;
@@ -101,8 +105,10 @@ public:
 
     void set_motion_model(motion_model_t model);
 
-    void set_motor_param(uint8_t id, uint16_t reducation_ratio, uint16_t pulse_ration, float wheel_diameter);
+    // void set_motor_param(uint8_t id, uint16_t reducation_ratio, uint16_t pulse_ration, float wheel_diameter);
+    void set_motor_param(uint8_t id, uint32_t speed_factor);
     void set_kinematic_param(float wheel_distance);
+    void set_kinematic_calib(float calib_mx, float calib_dx, float calib_myaw, float calib_dyaw);
     void set_kinematic_param(float wheel_distance_a, float wheel_distance_b);
 
     void kinematic_inverse(float linear_x_speed, float linear_y_speed, float angular_speed, 

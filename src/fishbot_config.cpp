@@ -29,17 +29,24 @@ void FishBotConfig::init(String namespace_)
 
         preferences.putString("ros2_nodename", CONFIG_DEFAULT_ROS2_NODE_NAME);
         preferences.putString("ros2_namespace", CONFIG_DEFAULT_ROS2_NAMESPACE);
+        preferences.putString("ros2_domainid", CONFIG_DEFAULT_ROS2_DOMAINID);
+        
         preferences.putString("odom_topic", CONFIG_DEFAULT_ROS2_ODOM_TOPIC_NAME);
         preferences.putString("odom_frameid", CONFIG_DEFAULT_ROS2_ODOM_FRAME_ID);
         preferences.putString("odom_c_frameid", CONFIG_DEFAULT_ROS2_ODOM_CHILD_FRAME_ID);
         preferences.putString("odom_pub_period", CONFIG_DEFAULT_ROS2_ODOM_PUBLISH_PERIOD);
         preferences.putString("twist_topic", CONFIG_DEFAULT_ROS2_CMD_VEL_TOPIC_NAME);
 
+        preferences.putString("wheel_dist", CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE);
         preferences.putString("wheel_dist_a", CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE_A);
         preferences.putString("wheel_dist_b", CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE_B);
-        preferences.putString("reducate_ration", CONFIG_DEFAULT_MOTOR_PARAM_REDUCATION_RATIO);
-        preferences.putString("pulse_ration", CONFIG_DEFAULT_MOTOR_PARAM_PULSE_RATION);
-        preferences.putString("wheel_diameter", CONFIG_DEFAULT_MOTOR_PARAM_WHEEL_DIAMETER);
+
+        preferences.putString("dspeed_factor", CONFIG_DEFAULT_MOTOR_PARAM_DSPEED_FACTOR);
+        preferences.putString("mspeed_facotr", CONFIG_DEFAULT_MOTOR_PARAM_MSPEED_FACTOR);
+        preferences.putString("calib_mx", CONFIG_DEFAULT_KINEMATIC_ODOM_CALIB_MX);
+        preferences.putString("calib_dx", CONFIG_DEFAULT_KINEMATIC_ODOM_CALIB_DX);
+        preferences.putString("calib_myaw", CONFIG_DEFAULT_KINEMATIC_ODOM_CALIB_MYAW);
+        preferences.putString("calib_dyaw", CONFIG_DEFAULT_KINEMATIC_ODOM_CALIB_DYAW);
 
         preferences.putString("pid_kp", CONFIG_DEFAULT_MOTOR_PID_KP);
         preferences.putString("pid_ki", CONFIG_DEFAULT_MOTOR_PID_KI);
@@ -65,84 +72,76 @@ bool FishBotConfig::config(String key, String value)
 String FishBotConfig::config_str()
 {
     String config("");
-    config.concat("$first_startup=");
-    config.concat(is_first_startup());
 
     config.concat("\n$motion=");
     config.concat(motion_mode());
-
-    config.concat("\n$serial_baud=");
-    config.concat(serial_baudrate());
-    // config.concat("\n$serial_id=");
-    // config.concat(microros_serial_id());
     config.concat("\n$wifi_ssid=");
     config.concat(wifi_sta_ssid());
     config.concat("\n$wifi_pswd=");
     config.concat(wifi_sta_pswd());
 
+    config.concat("\n$serial_baud=");
+    config.concat(serial_baudrate());
     config.concat("\n$wifi_ap_ssid=");
     config.concat(wifi_ap_ssid());
-
     config.concat("\n$wifi_ap_pswd=");
     config.concat(wifi_ap_pswd());
-
     config.concat("\n$microros_mode=");
     config.concat(microros_transport_mode());
-
     config.concat("\n$udpserver_ip=");
     config.concat(microros_uclient_server_ip());
-
     config.concat("\n$udpserver_port=");
     config.concat(microros_uclient_server_port());
 
     config.concat("\n$ros2_nodename=");
     config.concat(ros2_nodename());
-
     config.concat("\n$ros2_namespace=");
     config.concat(ros2_namespace());
+    config.concat("\n$ros2_domainid=");
+    config.concat(ros2_domainid());
 
     config.concat("\n$odom_topic=");
     config.concat(ros2_odom_topic_name());
-
     config.concat("\n$odom_frameid=");
     config.concat(ros2_odom_frameid());
-
     config.concat("\n$odom_c_frameid=");
     config.concat(ros2_odom_child_frameid());
-
     config.concat("\n$twist_topic=");
     config.concat(ros2_twist_topic_name());
-
     config.concat("\n$odom_pub_period=");
     config.concat(odom_publish_period());
 
-    config.concat("\n$reducate_ration=");
-    config.concat(kinematics_reducation_ration());
+    config.concat("\n$dspeed_factor=");
+    config.concat(motor_param_dspeed_factor());
+    config.concat("\n$mspeed_factor=");
+    config.concat(motor_param_mspeed_factor());
+    config.concat("\n$calib_mx=");
+    config.concat(kinematics_calib_mx());
+    config.concat("\n$calib_dx=");
+    config.concat(kinematics_calib_dx());
+    config.concat("\n$calib_myaw=");
+    config.concat(kinematics_calib_myaw());
+    config.concat("\n$calib_dyaw=");
+    config.concat(kinematics_calib_dyaw());
 
-    config.concat("\n$pulse_ration=");
-    config.concat(kinematics_pulse_ration());
-
-    config.concat("\n$wheel_diameter=");
-    config.concat(kinematics_wheel_diameter());
-
+    config.concat("\n$wheel_dist=");
+    config.concat(kinematics_wheel_distance());
     config.concat("\n$wheel_dist_a=");
     config.concat(kinematics_wheel_distance_a());
-
     config.concat("\n$wheel_dist_b=");
     config.concat(kinematics_wheel_distance_b());
 
     config.concat("\n$pid_kp=");
     config.concat(kinematics_pid_kp());
-
     config.concat("\n$pid_ki=");
     config.concat(kinematics_pid_ki());
-
     config.concat("\n$pid_kd=");
     config.concat(kinematics_pid_kd());
-
     config.concat("\n$pid_outlimit=");
     config.concat(kinematics_pid_out_limit());
 
+    config.concat("$first_startup=");
+    config.concat(is_first_startup());
     config.concat("\n$board=fishbot_motion_4driver_v2");
     config.concat("\n$version=v2.0.0\n");
 
@@ -208,6 +207,12 @@ String FishBotConfig::ros2_namespace()
 {
     return preferences.getString("ros2_namespace", CONFIG_DEFAULT_ROS2_NAMESPACE);
 }
+
+uint16_t FishBotConfig::ros2_domainid()
+{
+    return preferences.getString("ros2_domainid", CONFIG_DEFAULT_ROS2_DOMAINID).toInt();
+}
+
 String FishBotConfig::ros2_odom_topic_name()
 {
     return preferences.getString("odom_topic", CONFIG_DEFAULT_ROS2_ODOM_TOPIC_NAME);
@@ -229,6 +234,10 @@ String FishBotConfig::ros2_twist_topic_name()
     return preferences.getString("twist_topic", CONFIG_DEFAULT_ROS2_CMD_VEL_TOPIC_NAME);
 }
 // 运动学相关配置
+float FishBotConfig::kinematics_wheel_distance()
+{
+    return preferences.getString("wheel_dist", CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE).toFloat();
+}
 float FishBotConfig::kinematics_wheel_distance_a()
 {
     return preferences.getString("wheel_dist_a", CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE_A).toFloat();
@@ -237,17 +246,29 @@ float FishBotConfig::kinematics_wheel_distance_b()
 {
     return preferences.getString("wheel_dist_b", CONFIG_DEFAULT_KINEMATIC_WHEEL_DISTANCE_B).toFloat();
 }
-float FishBotConfig::kinematics_reducation_ration()
+float FishBotConfig::motor_param_dspeed_factor()
 {
-    return preferences.getString("reducate_ration", CONFIG_DEFAULT_MOTOR_PARAM_REDUCATION_RATIO).toFloat();
+    return preferences.getString("dspeed_factor", CONFIG_DEFAULT_MOTOR_PARAM_DSPEED_FACTOR).toFloat();
 }
-uint32_t FishBotConfig::kinematics_pulse_ration()
+float FishBotConfig::motor_param_mspeed_factor()
 {
-    return preferences.getString("pulse_ration", CONFIG_DEFAULT_MOTOR_PARAM_PULSE_RATION).toInt();
+    return preferences.getString("mspeed_facotr", CONFIG_DEFAULT_MOTOR_PARAM_MSPEED_FACTOR).toFloat();
 }
-uint32_t FishBotConfig::kinematics_wheel_diameter()
+float FishBotConfig::kinematics_calib_mx()
 {
-    return preferences.getString("wheel_diameter", CONFIG_DEFAULT_MOTOR_PARAM_WHEEL_DIAMETER).toInt();
+    return preferences.getString("calib_mx", CONFIG_DEFAULT_KINEMATIC_ODOM_CALIB_MX).toFloat();
+}
+float FishBotConfig::kinematics_calib_dx()
+{
+    return preferences.getString("calib_dx", CONFIG_DEFAULT_KINEMATIC_ODOM_CALIB_DX).toFloat();
+}
+float FishBotConfig::kinematics_calib_myaw()
+{
+    return preferences.getString("calib_myaw", CONFIG_DEFAULT_KINEMATIC_ODOM_CALIB_MYAW).toFloat();
+}
+float FishBotConfig::kinematics_calib_dyaw()
+{
+    return preferences.getString("calib_dyaw", CONFIG_DEFAULT_KINEMATIC_ODOM_CALIB_DYAW).toFloat();
 }
 float FishBotConfig::kinematics_pid_kp()
 {
