@@ -35,8 +35,8 @@
 #define CONFIG_DEFAULT_WIFI_STA_PSWK "88888888"
 
 //--------------------------------------电机相关配置---------------------------------------
-#define CONFIG_DEFAULT_MOTOR_PID_KP "0.625"
-#define CONFIG_DEFAULT_MOTOR_PID_KI "0.125"
+#define CONFIG_DEFAULT_MOTOR_PID_KP "0.30"
+#define CONFIG_DEFAULT_MOTOR_PID_KI "0.02"
 #define CONFIG_DEFAULT_MOTOR_PID_KD "0.0"
 #define CONFIG_DEFAULT_MOTOR_OUT_LIMIT_LOW "-100"
 #define CONFIG_DEFAULT_MOTOR_OUT_LIMIT_HIGH "100"

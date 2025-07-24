@@ -177,7 +177,7 @@ bool setup_fishbot()
         pid_controller[i].update_target(0.0);
         pid_controller[i].update_pid(config.kinematics_pid_kp(), config.kinematics_pid_ki(), config.kinematics_pid_kd());
         pid_controller[i].out_limit(-config.kinematics_pid_out_limit(), config.kinematics_pid_out_limit());
-        kinematics.set_motor_param(i, (config.motion_mode() == CONFIG_MOTION_MODE_MECANUM ? config.motor_param_mspeed_factor() : config.motor_param_dspeed_factor())*1000);
+        kinematics.set_motor_param(i, (config.motion_mode() == CONFIG_MOTION_MODE_MECANUM ? config.motor_param_mspeed_factor() : config.motor_param_dspeed_factor()) * 1000);
     }
     // 4.设置运动学参数
     kinematics.set_kinematic_calib(config.kinematics_calib_mx(), config.kinematics_calib_dx(), config.kinematics_calib_myaw(), config.kinematics_calib_dyaw());
@@ -215,6 +215,31 @@ static void deal_command(char key[32], char value[32])
     // 传入的命令不是 "restart" 或 "read_config"
     else
     {
+        // 判断参数是否为pid_kp、pid_ki或pid_kd，如果是则更新PID参数
+        if (strcmp(key, "pid_kp") == 0)
+        {
+            float kp = atof(value);
+            for (size_t i = 0; i < 4; i++)
+            {
+                pid_controller[i].update_pid(kp, config.kinematics_pid_ki(), config.kinematics_pid_kd());
+            }
+        }
+        else if (strcmp(key, "pid_ki") == 0)
+        {
+            float ki = atof(value);
+            for (size_t i = 0; i < 4; i++)
+            {
+                pid_controller[i].update_pid(config.kinematics_pid_kp(), ki, config.kinematics_pid_kd());
+            }
+        }
+        else if (strcmp(key, "pid_kd") == 0)
+        {
+            float kd = atof(value);
+            for (size_t i = 0; i < 4; i++)
+            {
+                pid_controller[i].update_pid(config.kinematics_pid_kp(), config.kinematics_pid_ki(), kd);
+            }
+        }
         // 创建两个 String 对象 "recv_key" 和 "recv_value"
         // 并将传入的 "key" 和 "value" 分别作为参数来初始化这两个对象。
         String recv_key(key);
